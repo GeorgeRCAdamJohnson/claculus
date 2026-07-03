@@ -8,6 +8,8 @@ const SlopeSurfer = {
     sliderValue: 0,
     difficulty: 'easy',
     questionCount: 0,
+    showingAnswer: false,
+    actualSlope: 0,
 
     functions: {
         easy: [
@@ -39,18 +41,21 @@ const SlopeSurfer = {
         this.ctx = ctx;
         this.engine = engine;
         this.questionCount = 0;
+        this.showingAnswer = false;
         this.setupControls();
     },
 
     setupControls() {
         const controls = document.getElementById('game-controls');
         controls.innerHTML = `
+            <div class="inline-instruction">👆 Drag slider to match the tangent slope at the pink dot</div>
             <div class="control-row">
                 <span class="control-label">Slope:</span>
                 <input type="range" id="slope-slider" min="-5" max="5" step="0.1" value="0">
                 <span class="control-value" id="slope-display">0.0</span>
             </div>
             <button class="submit-btn" id="slope-submit">Submit ▶</button>
+            <div class="answer-reveal hidden" id="slope-answer"></div>
         `;
         const slider = document.getElementById('slope-slider');
         const display = document.getElementById('slope-display');
@@ -59,7 +64,6 @@ const SlopeSurfer = {
             display.textContent = this.sliderValue.toFixed(1);
         });
         document.getElementById('slope-submit').addEventListener('click', () => this.submit());
-        // Keyboard
         document.addEventListener('keydown', this._keyHandler = (e) => {
             if (e.key === 'Enter' && this.engine.state === 'playing') this.submit();
         });
@@ -67,7 +71,9 @@ const SlopeSurfer = {
 
     generateQuestion() {
         this.questionCount++;
-        // Select difficulty based on assessment
+        this.showingAnswer = false;
+        document.getElementById('slope-answer').classList.add('hidden');
+        
         if (window.app && window.app.assessment) {
             const elapsed = 30 - this.engine.timer;
             const acc = this.engine.total > 0 ? this.engine.correct / this.engine.total : 0.5;
@@ -77,42 +83,50 @@ const SlopeSurfer = {
         }
         const pool = this.functions[this.difficulty];
         const q = pool[Math.floor(Math.random() * pool.length)];
-        // Random x point
         const xRange = this.difficulty === 'hard' ? [-2.5, 2.5] : [-2, 2];
         const xPoint = xRange[0] + Math.random() * (xRange[1] - xRange[0]);
         this.currentQuestion = { ...q, xPoint: Math.round(xPoint * 10) / 10 };
-        // Reset slider
+        this.actualSlope = q.deriv(this.currentQuestion.xPoint);
+        
         this.sliderValue = 0;
         const slider = document.getElementById('slope-slider');
         if (slider) { slider.value = 0; document.getElementById('slope-display').textContent = '0.0'; }
-        // Update instruction
-        document.getElementById('game-instruction').textContent = `Find the slope at x = ${this.currentQuestion.xPoint.toFixed(1)}`;
+        document.getElementById('game-instruction').textContent = `What's the slope at x = ${this.currentQuestion.xPoint.toFixed(1)}?`;
     },
 
     submit() {
-        if (!this.currentQuestion || this.engine.state !== 'playing') return;
-        const actual = this.currentQuestion.deriv(this.currentQuestion.xPoint);
+        if (!this.currentQuestion || this.engine.state !== 'playing' || this.showingAnswer) return;
+        const actual = this.actualSlope;
         const estimated = this.sliderValue;
         const error = Math.abs(estimated - actual);
         const maxError = 5;
         const accuracy = Math.max(0, 1 - error / maxError);
+        
+        // Show the correct answer briefly
+        this.showingAnswer = true;
+        const answerEl = document.getElementById('slope-answer');
+        const wasCorrect = accuracy >= 0.35;
+        answerEl.innerHTML = wasCorrect 
+            ? `✓ Actual slope: <strong>${actual.toFixed(1)}</strong> (you said ${estimated.toFixed(1)})`
+            : `✗ Actual slope: <strong>${actual.toFixed(1)}</strong> (you said ${estimated.toFixed(1)})`;
+        answerEl.className = `answer-reveal ${wasCorrect ? 'answer-correct' : 'answer-wrong'}`;
+        
         this.engine.submitAnswer({
-            correct: accuracy >= 0.35,
+            correct: wasCorrect,
             accuracy,
             concept: this.currentQuestion.concept
         });
     },
 
-    update(dt) { /* Static rendering, no animation needed per frame */ },
+    update(dt) {},
 
     render(ctx, w, h) {
         if (!this.currentQuestion) return;
         const q = this.currentQuestion;
-        const padding = 60;
+        const padding = 50;
         const graphW = w - padding * 2;
-        const graphH = h - padding * 2 - 60; // extra space for controls
+        const graphH = h - padding * 2 - 80;
 
-        // Determine view bounds
         const xMin = -4, xMax = 4, yMin = -4, yMax = 4;
         const toScreenX = (x) => padding + (x - xMin) / (xMax - xMin) * graphW;
         const toScreenY = (y) => padding + (1 - (y - yMin) / (yMax - yMin)) * graphH;
@@ -127,10 +141,15 @@ const SlopeSurfer = {
             ctx.beginPath(); ctx.moveTo(padding, toScreenY(y)); ctx.lineTo(padding + graphW, toScreenY(y)); ctx.stroke();
         }
         // Axes
-        ctx.strokeStyle = 'rgba(255,255,255,0.12)';
+        ctx.strokeStyle = 'rgba(255,255,255,0.15)';
         ctx.lineWidth = 1.5;
         ctx.beginPath(); ctx.moveTo(toScreenX(xMin), toScreenY(0)); ctx.lineTo(toScreenX(xMax), toScreenY(0)); ctx.stroke();
         ctx.beginPath(); ctx.moveTo(toScreenX(0), toScreenY(yMin)); ctx.lineTo(toScreenX(0), toScreenY(yMax)); ctx.stroke();
+        // Axis labels
+        ctx.fillStyle = 'rgba(255,255,255,0.25)';
+        ctx.font = '10px sans-serif';
+        ctx.fillText('x', toScreenX(xMax) - 10, toScreenY(0) - 5);
+        ctx.fillText('y', toScreenX(0) + 5, padding + 10);
 
         // Draw curve with glow
         ctx.save();
@@ -150,14 +169,10 @@ const SlopeSurfer = {
         ctx.stroke();
         ctx.restore();
 
-        // Draw tangent line (player's guess)
+        // Draw tangent line (player's guess) — GOLD, prominent
         const px = toScreenX(q.xPoint);
         const py = toScreenY(q.fn(q.xPoint));
-        const tangentLen = 80;
-        const angle = Math.atan(this.sliderValue);
-        const dx = Math.cos(angle) * tangentLen;
-        const dy = -Math.sin(angle) * tangentLen; // screen Y is inverted
-        // Scale for aspect ratio
+        const tangentLen = 90;
         const scaleX = graphW / (xMax - xMin);
         const scaleY = graphH / (yMax - yMin);
         const aspectAngle = Math.atan2(this.sliderValue * scaleY, scaleX);
@@ -165,41 +180,73 @@ const SlopeSurfer = {
         const tdy = -Math.sin(aspectAngle) * tangentLen;
 
         ctx.save();
-        ctx.shadowColor = 'rgba(255, 217, 61, 0.5)';
-        ctx.shadowBlur = 8;
+        ctx.shadowColor = 'rgba(255, 217, 61, 0.6)';
+        ctx.shadowBlur = 10;
         ctx.strokeStyle = '#ffd93d';
-        ctx.lineWidth = 2.5;
-        ctx.setLineDash([]);
+        ctx.lineWidth = 3;
         ctx.beginPath();
         ctx.moveTo(px - tdx, py - tdy);
         ctx.lineTo(px + tdx, py + tdy);
         ctx.stroke();
         ctx.restore();
 
-        // Draw point (pulsing)
-        const pulse = 1 + Math.sin(Date.now() / 300) * 0.2;
+        // If showing answer, also draw the CORRECT tangent in green
+        if (this.showingAnswer) {
+            const correctAngle = Math.atan2(this.actualSlope * scaleY, scaleX);
+            const cdx = Math.cos(correctAngle) * tangentLen;
+            const cdy = -Math.sin(correctAngle) * tangentLen;
+            ctx.save();
+            ctx.shadowColor = 'rgba(0, 214, 143, 0.6)';
+            ctx.shadowBlur = 10;
+            ctx.strokeStyle = '#00d68f';
+            ctx.lineWidth = 3;
+            ctx.setLineDash([6, 4]);
+            ctx.beginPath();
+            ctx.moveTo(px - cdx, py - cdy);
+            ctx.lineTo(px + cdx, py + cdy);
+            ctx.stroke();
+            ctx.setLineDash([]);
+            ctx.restore();
+        }
+
+        // Draw point (pulsing) — larger and more visible
+        const pulse = 1 + Math.sin(Date.now() / 300) * 0.25;
         ctx.save();
-        ctx.shadowColor = 'rgba(255, 107, 157, 0.6)';
-        ctx.shadowBlur = 15;
+        ctx.shadowColor = 'rgba(255, 107, 157, 0.7)';
+        ctx.shadowBlur = 20;
         ctx.fillStyle = '#ff6b9d';
         ctx.beginPath();
-        ctx.arc(px, py, 7 * pulse, 0, Math.PI * 2);
+        ctx.arc(px, py, 9 * pulse, 0, Math.PI * 2);
         ctx.fill();
         ctx.fillStyle = '#fff';
         ctx.beginPath();
-        ctx.arc(px, py, 3, 0, Math.PI * 2);
+        ctx.arc(px, py, 4, 0, Math.PI * 2);
         ctx.fill();
         ctx.restore();
 
-        // Function label
-        ctx.fillStyle = 'rgba(255,255,255,0.6)';
-        ctx.font = '13px "SF Mono", monospace';
-        ctx.fillText(q.label, padding + 5, padding + 18);
+        // Big on-canvas instruction (top)
+        ctx.fillStyle = 'rgba(255,255,255,0.85)';
+        ctx.font = 'bold 14px sans-serif';
+        ctx.textAlign = 'center';
+        ctx.fillText(`Match the gold line to the curve's slope at the pink dot`, w / 2, padding - 10);
+        ctx.textAlign = 'left';
 
-        // x point label
-        ctx.fillStyle = 'rgba(255,107,157,0.8)';
-        ctx.font = '11px "SF Mono", monospace';
-        ctx.fillText(`x = ${q.xPoint.toFixed(1)}`, px + 12, py - 12);
+        // Function label (bottom-left, clearer)
+        ctx.fillStyle = 'rgba(255,255,255,0.7)';
+        ctx.font = '14px "SF Mono", monospace';
+        ctx.fillText(q.label, padding + 5, padding + graphH + 35);
+
+        // Show "Your slope" indicator on canvas
+        ctx.fillStyle = 'rgba(255, 217, 61, 0.9)';
+        ctx.font = 'bold 12px "SF Mono", monospace';
+        ctx.textAlign = 'right';
+        ctx.fillText(`m = ${this.sliderValue.toFixed(1)}`, w - padding, padding + 18);
+        ctx.textAlign = 'left';
+
+        // Arrow pointing at the dot with label
+        ctx.fillStyle = 'rgba(255, 107, 157, 0.9)';
+        ctx.font = '11px sans-serif';
+        ctx.fillText(`x = ${q.xPoint.toFixed(1)}`, px + 14, py - 14);
     },
 
     cleanup() {
