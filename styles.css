@@ -266,18 +266,19 @@ input[type="range"]::-moz-range-thumb {
 
 /* Choice buttons (multiple choice games) */
 .choices-row {
-    display: grid; grid-template-columns: 1fr 1fr; gap: 0.5rem;
-    width: 100%; max-width: 320px;
+    display: grid; grid-template-columns: 1fr 1fr; gap: 0.6rem;
+    width: 100%; max-width: 340px; padding: 0.25rem;
 }
 .choice-btn {
-    padding: 12px 8px; background: var(--bg-elevated); border: 2px solid rgba(255,255,255,0.1);
-    border-radius: 10px; color: var(--text); font-size: 1.1rem; font-weight: 700;
+    padding: 14px 10px; background: var(--bg-elevated); border: 2px solid rgba(255,255,255,0.12);
+    border-radius: 12px; color: var(--text); font-size: 1.2rem; font-weight: 700;
     font-family: 'SF Mono', monospace; cursor: pointer; transition: all 0.15s;
-    min-height: 48px; touch-action: manipulation; text-align: center;
+    min-height: 56px; touch-action: manipulation; text-align: center;
+    display: flex; align-items: center; justify-content: center;
 }
-.choice-btn:active { transform: scale(0.95); border-color: var(--primary); }
-.choice-correct { border-color: var(--correct) !important; background: rgba(0,214,143,0.2) !important; color: var(--correct) !important; }
-.choice-wrong { border-color: var(--wrong) !important; background: rgba(255,87,87,0.2) !important; color: var(--wrong) !important; }
+.choice-btn:active { transform: scale(0.93); border-color: var(--primary); background: rgba(124,92,231,0.2); }
+.choice-correct { border-color: var(--correct) !important; background: rgba(0,214,143,0.25) !important; color: var(--correct) !important; }
+.choice-wrong { border-color: var(--wrong) !important; background: rgba(255,87,87,0.25) !important; color: var(--wrong) !important; }
 
 /* Menu scrollable for 5 games */
 .game-modes { overflow-y: auto; max-height: 55vh; }

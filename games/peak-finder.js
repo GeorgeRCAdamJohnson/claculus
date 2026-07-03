@@ -12,15 +12,26 @@ const PeakFinder = {
             { fn: x => -(x-2)*(x-2) + 4, extrema: [{x: 2, type: 'max'}], label: 'f(x) = -(x-2)\u00b2+4', teach: "One peak at x=2 where the parabola turns. f'(x)=0 here!", concept: 'derivative_power', xRange: [-1, 5] },
             { fn: x => (x-1)*(x-1) - 1, extrema: [{x: 1, type: 'min'}], label: 'f(x) = (x-1)\u00b2-1', teach: "One valley at x=1. The slope changes from negative to positive.", concept: 'derivative_power', xRange: [-2, 4] },
             { fn: x => Math.sin(x), extrema: [{x: Math.PI/2, type: 'max'}, {x: -Math.PI/2, type: 'min'}], label: 'f(x) = sin(x)', teach: "Sin peaks at \u03c0/2 and valleys at -\u03c0/2. Derivative (cos) = 0 there!", concept: 'derivative_trig', xRange: [-4, 4] },
+            { fn: x => -(x+1)*(x+1) + 3, extrema: [{x: -1, type: 'max'}], label: 'f(x) = -(x+1)\u00b2+3', teach: "Peak at x=-1. The negative sign flips the parabola upside down.", concept: 'derivative_power', xRange: [-4, 2] },
+            { fn: x => (x+2)*(x+2), extrema: [{x: -2, type: 'min'}], label: 'f(x) = (x+2)\u00b2', teach: "Valley at x=-2. Every parabola opening up has a minimum!", concept: 'derivative_power', xRange: [-5, 1] },
+            { fn: x => -x*x + 2*x + 3, extrema: [{x: 1, type: 'max'}], label: 'f(x) = -x\u00b2+2x+3', teach: "Complete the square: -(x-1)\u00b2+4. Peak at x=1!", concept: 'derivative_power', xRange: [-2, 4] },
+            { fn: x => x*x - 4*x, extrema: [{x: 2, type: 'min'}], label: 'f(x) = x\u00b2-4x', teach: "f'(x)=2x-4=0 at x=2. That's the minimum!", concept: 'derivative_power', xRange: [-1, 5] },
+            { fn: x => Math.cos(x), extrema: [{x: 0, type: 'max'}, {x: Math.PI, type: 'min'}], label: 'f(x) = cos(x)', teach: "Cos peaks at x=0 and valleys at x=\u03c0.", concept: 'derivative_trig', xRange: [-2, 5] },
         ],
         medium: [
             { fn: x => x*x*x - 3*x, extrema: [{x: -1, type: 'max'}, {x: 1, type: 'min'}], label: 'f(x) = x\u00b3-3x', teach: "Cubic with two turning points. f'(x)=3x\u00b2-3=0 at x=\u00b11.", concept: 'derivative_power', xRange: [-3, 3] },
             { fn: x => Math.sin(x) * 2, extrema: [{x: Math.PI/2, type: 'max'}, {x: -Math.PI/2, type: 'min'}], label: 'f(x) = 2sin(x)', teach: "Scaling doesn't move the peaks! Still at \u03c0/2 and -\u03c0/2.", concept: 'derivative_trig', xRange: [-4, 4] },
             { fn: x => -x*x*x*x/4 + x*x, extrema: [{x: -Math.sqrt(2), type: 'max'}, {x: 0, type: 'min'}, {x: Math.sqrt(2), type: 'max'}], label: 'f(x) = -x\u2074/4+x\u00b2', teach: "Three extrema! f'=0 at each one. Two peaks and a valley between.", concept: 'derivative_power', xRange: [-3, 3] },
+            { fn: x => x*x*x/3 - x*x - 3*x, extrema: [{x: -1, type: 'max'}, {x: 3, type: 'min'}], label: 'f(x) = x\u00b3/3-x\u00b2-3x', teach: "f'(x)=x\u00b2-2x-3=(x-3)(x+1). Two turning points!", concept: 'derivative_power', xRange: [-3, 5] },
+            { fn: x => Math.sin(x) + Math.cos(x), extrema: [{x: Math.PI/4, type: 'max'}, {x: -3*Math.PI/4, type: 'min'}], label: 'f(x) = sin(x)+cos(x)', teach: "Combined trig: peaks where sin and cos are both positive!", concept: 'derivative_trig', xRange: [-4, 4] },
+            { fn: x => x*x*x*x/4 - 2*x*x, extrema: [{x: -2, type: 'min'}, {x: 0, type: 'max'}, {x: 2, type: 'min'}], label: 'f(x) = x\u2074/4-2x\u00b2', teach: "W-shape! Two valleys and a peak in the middle.", concept: 'derivative_power', xRange: [-3.5, 3.5] },
         ],
         hard: [
             { fn: x => Math.sin(2*x), extrema: [{x: Math.PI/4, type: 'max'}, {x: -Math.PI/4, type: 'min'}, {x: 3*Math.PI/4, type: 'min'}], label: 'f(x) = sin(2x)', teach: "Twice the frequency = twice as many peaks! Chain rule speeds things up.", concept: 'derivative_chain', xRange: [-3.5, 3.5] },
             { fn: x => x*x*x - 6*x*x + 9*x, extrema: [{x: 1, type: 'max'}, {x: 3, type: 'min'}], label: 'f(x) = x\u00b3-6x\u00b2+9x', teach: "f'(x)=3x\u00b2-12x+9=3(x-1)(x-3). Zeros at x=1 and x=3!", concept: 'derivative_power', xRange: [-1, 5] },
+            { fn: x => Math.cos(2*x) + x*0.3, extrema: [{x: 0, type: 'max'}, {x: Math.PI/2, type: 'min'}], label: 'f(x) = cos(2x)+0.3x', teach: "The linear term tilts the wave but peaks/valleys still exist!", concept: 'derivative_chain', xRange: [-2, 4] },
+            { fn: x => x*Math.exp(-x*x/4), extrema: [{x: -Math.sqrt(2), type: 'min'}, {x: Math.sqrt(2), type: 'max'}], label: 'f(x) = x\u00b7e^(-x\u00b2/4)', teach: "Gaussian-modulated — peaks where the exponential and linear balance.", concept: 'derivative_chain', xRange: [-4, 4] },
+            { fn: x => 2*Math.sin(x) - Math.sin(2*x), extrema: [{x: Math.PI/3, type: 'max'}, {x: Math.PI, type: 'min'}], label: 'f(x) = 2sin(x)-sin(2x)', teach: "Combining sines creates interesting shapes. Peaks where derivatives cancel.", concept: 'derivative_trig', xRange: [-1, 4.5] },
         ]
     },
 
@@ -103,10 +114,17 @@ const PeakFinder = {
             const acc = this.engine.total > 0 ? this.engine.correct / this.engine.total : 0.5;
             this.difficulty = window.app.assessment.selectDifficulty(acc, elapsed);
         } else {
-            this.difficulty = this.questionCount <= 2 ? 'easy' : this.questionCount <= 4 ? 'medium' : 'hard';
+            this.difficulty = this.questionCount <= 3 ? 'easy' : this.questionCount <= 6 ? 'medium' : 'hard';
         }
         const pool = this.functions[this.difficulty];
-        this.currentQuestion = pool[Math.floor(Math.random() * pool.length)];
+        // Avoid repeating the same question consecutively
+        let q;
+        let attempts = 0;
+        do {
+            q = pool[Math.floor(Math.random() * pool.length)];
+            attempts++;
+        } while (q === this.currentQuestion && pool.length > 1 && attempts < 5);
+        this.currentQuestion = q;
         this.requiredTaps = this.currentQuestion.extrema.length;
         document.getElementById('game-instruction').textContent = `Tap ${this.requiredTaps} turning point${this.requiredTaps > 1 ? 's' : ''}!`;
     },
