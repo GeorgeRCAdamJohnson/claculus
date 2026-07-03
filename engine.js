@@ -68,12 +68,14 @@ class GameEngine {
                 numEl.style.animation = 'none';
                 void numEl.offsetWidth;
                 numEl.style.animation = '';
+                if (window.feedback) window.feedback.onCountdown();
             } else {
                 numEl.textContent = 'GO!';
                 numEl.style.color = 'var(--correct)';
                 numEl.style.animation = 'none';
                 void numEl.offsetWidth;
                 numEl.style.animation = '';
+                if (window.feedback) window.feedback.onGo();
                 setTimeout(() => {
                     overlay.classList.add('hidden');
                     numEl.style.color = '';
@@ -111,7 +113,10 @@ class GameEngine {
         const offset = (1 - this.timer / 30) * 163.36;
         progress.style.strokeDashoffset = offset;
         progress.classList.remove('warning', 'danger');
-        if (this.timer <= 5) progress.classList.add('danger');
+        if (this.timer <= 5) {
+            progress.classList.add('danger');
+            if (window.feedback) window.feedback.onTimerWarning();
+        }
         else if (this.timer <= 10) progress.classList.add('warning');
     }
 
@@ -163,9 +168,20 @@ class GameEngine {
         if (tier === 'perfect') {
             document.querySelector('.game-area').classList.add('shake-strong');
             setTimeout(() => document.querySelector('.game-area').classList.remove('shake-strong'), 400);
-        } else if (tier !== 'miss') {
+            if (window.feedback) window.feedback.onPerfect();
+        } else if (tier === 'great' || tier === 'good') {
             document.querySelector('.game-area').classList.add('shake');
             setTimeout(() => document.querySelector('.game-area').classList.remove('shake'), 300);
+            if (window.feedback) window.feedback.onCorrect();
+        } else if (tier === 'close') {
+            if (window.feedback) window.feedback.onClose();
+        } else {
+            if (window.feedback) window.feedback.onWrong();
+        }
+
+        // Streak sound
+        if (this.streak === 3 || this.streak === 5 || this.streak === 8) {
+            if (window.feedback) window.feedback.onStreak();
         }
 
         // Emit particles
@@ -226,6 +242,9 @@ class GameEngine {
         if (isNewHigh) {
             this.highScores[this.currentGame] = this.score;
             this.saveHighScores();
+            if (window.feedback) window.feedback.onHighScore();
+        } else {
+            if (window.feedback) window.feedback.onGameOver();
         }
 
         // Record session

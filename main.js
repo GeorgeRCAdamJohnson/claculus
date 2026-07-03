@@ -4,6 +4,8 @@ class App {
         this.engine = new GameEngine();
         this.assessment = new Assessment();
         this.tutorial = new Tutorial();
+        this.feedback = new FeedbackSystem();
+        window.feedback = this.feedback;
         this.particles = {
             menu: new AmbientParticles(document.getElementById('menu-particles')),
             results: new ParticleSystem(document.getElementById('results-particles'))
@@ -12,7 +14,9 @@ class App {
         this.games = {
             'slope-surfer': SlopeSurfer,
             'area-catcher': AreaCatcher,
-            'limit-lander': LimitLander
+            'limit-lander': LimitLander,
+            'rate-racer': RateRacer,
+            'peak-finder': PeakFinder
         };
         this.init();
     }
@@ -59,10 +63,21 @@ class App {
         document.getElementById('btn-how-to-play').addEventListener('click', () => {
             this.showTutorial('slope-surfer');
         });
+
+        // Sound toggle
+        document.getElementById('btn-toggle-sound').addEventListener('click', () => {
+            this.feedback.initAudio(); // Needs user gesture
+            this.feedback.toggleSound();
+            const btn = document.getElementById('btn-toggle-sound');
+            btn.textContent = this.feedback.enabled.sound ? '🔊 Sound' : '🔇 Muted';
+            this.feedback.soundButtonTap();
+        });
     }
 
     startGame(gameType) {
         this.currentGameType = gameType;
+        // Init audio on first interaction (browser requirement)
+        if (this.feedback) this.feedback.initAudio();
         // Check if tutorial needed
         if (!this.tutorial.isComplete(gameType)) {
             this.showTutorial(gameType);
@@ -83,7 +98,7 @@ class App {
         this.particles.menu.stop();
 
         // Set HUD title
-        const titles = { 'slope-surfer': 'Slope Surfer', 'area-catcher': 'Area Catcher', 'limit-lander': 'Limit Lander' };
+        const titles = { 'slope-surfer': 'Derivative Draw', 'area-catcher': 'Area Pick', 'limit-lander': 'Limit Picker', 'rate-racer': 'Rate Racer', 'peak-finder': 'Peak Finder' };
         document.getElementById('game-title-hud').textContent = titles[gameType] || '';
 
         // Setup game canvas particles

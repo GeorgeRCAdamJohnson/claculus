@@ -20,10 +20,10 @@
                 
                 <div class="game-modes">
                     <button class="mode-btn" data-game="slope-surfer">
-                        <div class="mode-icon">📐</div>
+                        <div class="mode-icon">✏️</div>
                         <div class="mode-info">
-                            <h3>Slope Surfer</h3>
-                            <p>Match tangent line slopes on curves</p>
+                            <h3>Derivative Draw</h3>
+                            <p>Draw the derivative with your finger!</p>
                         </div>
                         <div class="mode-meta">
                             <div class="mode-badge">Derivatives</div>
@@ -34,8 +34,8 @@
                     <button class="mode-btn" data-game="area-catcher">
                         <div class="mode-icon">📊</div>
                         <div class="mode-info">
-                            <h3>Area Catcher</h3>
-                            <p>Estimate areas under curves</p>
+                            <h3>Area Pick</h3>
+                            <p>Estimate the integral from the graph</p>
                         </div>
                         <div class="mode-meta">
                             <div class="mode-badge badge-teal">Integrals</div>
@@ -46,12 +46,36 @@
                     <button class="mode-btn" data-game="limit-lander">
                         <div class="mode-icon">🎯</div>
                         <div class="mode-info">
-                            <h3>Limit Lander</h3>
-                            <p>Find where functions approach</p>
+                            <h3>Limit Picker</h3>
+                            <p>What value does the function approach?</p>
                         </div>
                         <div class="mode-meta">
                             <div class="mode-badge badge-pink">Limits</div>
                             <div class="mode-score">Best: <span class="high-score" data-mode="limit-lander">0</span></div>
+                        </div>
+                    </button>
+
+                    <button class="mode-btn" data-game="rate-racer">
+                        <div class="mode-icon">🚗</div>
+                        <div class="mode-info">
+                            <h3>Rate Racer</h3>
+                            <p>Speed graph → total distance</p>
+                        </div>
+                        <div class="mode-meta">
+                            <div class="mode-badge badge-teal">FTC</div>
+                            <div class="mode-score">Best: <span class="high-score" data-mode="rate-racer">0</span></div>
+                        </div>
+                    </button>
+
+                    <button class="mode-btn" data-game="peak-finder">
+                        <div class="mode-icon">⛰️</div>
+                        <div class="mode-info">
+                            <h3>Peak Finder</h3>
+                            <p>Tap the maxima & minima</p>
+                        </div>
+                        <div class="mode-meta">
+                            <div class="mode-badge">Max/Min</div>
+                            <div class="mode-score">Best: <span class="high-score" data-mode="peak-finder">0</span></div>
                         </div>
                     </button>
                 </div>
@@ -59,6 +83,7 @@
                 <div class="menu-footer">
                     <button id="btn-knowledge-map" class="btn-link">📊 Knowledge Map</button>
                     <button id="btn-how-to-play" class="btn-link">❓ How to Play</button>
+                    <button id="btn-toggle-sound" class="btn-link">🔊 Sound</button>
                 </div>
             </div>
         </div>
@@ -166,6 +191,7 @@
         </div>
     </div>
 
+    <script src="feedback.js"></script>
     <script src="particles.js"></script>
     <script src="assessment.js"></script>
     <script src="tutorial.js"></script>
@@ -173,6 +199,8 @@
     <script src="games/slope-surfer.js"></script>
     <script src="games/area-catcher.js"></script>
     <script src="games/limit-lander.js"></script>
+    <script src="games/rate-racer.js"></script>
+    <script src="games/peak-finder.js"></script>
     <script src="main.js"></script>
 </body>
 </html>
