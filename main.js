@@ -4,6 +4,8 @@ class App {
         this.engine = new GameEngine();
         this.assessment = new Assessment();
         this.tutorial = new Tutorial();
+        this.feedback = new FeedbackSystem();
+        window.feedback = this.feedback;
         this.particles = {
             menu: new AmbientParticles(document.getElementById('menu-particles')),
             results: new ParticleSystem(document.getElementById('results-particles'))
@@ -61,10 +63,21 @@ class App {
         document.getElementById('btn-how-to-play').addEventListener('click', () => {
             this.showTutorial('slope-surfer');
         });
+
+        // Sound toggle
+        document.getElementById('btn-toggle-sound').addEventListener('click', () => {
+            this.feedback.initAudio(); // Needs user gesture
+            this.feedback.toggleSound();
+            const btn = document.getElementById('btn-toggle-sound');
+            btn.textContent = this.feedback.enabled.sound ? '🔊 Sound' : '🔇 Muted';
+            this.feedback.soundButtonTap();
+        });
     }
 
     startGame(gameType) {
         this.currentGameType = gameType;
+        // Init audio on first interaction (browser requirement)
+        if (this.feedback) this.feedback.initAudio();
         // Check if tutorial needed
         if (!this.tutorial.isComplete(gameType)) {
             this.showTutorial(gameType);
