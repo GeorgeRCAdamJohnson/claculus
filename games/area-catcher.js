@@ -1,77 +1,47 @@
-// Area Catcher - Integrals Game
+// Game 2: Area Fill
+// Tap to stack rectangles under a curve. Build the Riemann sum!
+// Teaches: "Integrals = area under curve = sum of rectangles"
 const AreaCatcher = {
     name: 'area-catcher',
-    engine: null,
-    canvas: null,
-    ctx: null,
-    currentQuestion: null,
-    sliderValue: 0,
-    difficulty: 'easy',
-    questionCount: 0,
-    riemannCount: 4,
-    riemannAnim: 0,
-    showingAnswer: false,
+    engine: null, canvas: null, ctx: null,
+    currentQuestion: null, difficulty: 'easy', questionCount: 0,
+    showingAnswer: false, placedRects: [], targetRects: 0,
+    phase: 'fill', // 'fill' or 'reveal'
+    choices: [], selectedChoice: -1,
 
     functions: {
         easy: [
-            { fn: x => x, bounds: [0, 3], area: 4.5, label: '∫₀³ x dx', concept: 'integral_basic' },
-            { fn: x => 2, bounds: [0, 3], area: 6, label: '∫₀³ 2 dx', concept: 'integral_basic' },
-            { fn: x => x + 1, bounds: [0, 2], area: 4, label: '∫₀² (x+1) dx', concept: 'integral_basic' },
-            { fn: x => 3 - x, bounds: [0, 3], area: 4.5, label: '∫₀³ (3-x) dx', concept: 'integral_basic' },
-            { fn: x => 0.5 * x + 1, bounds: [0, 4], area: 8, label: '∫₀⁴ (½x+1) dx', concept: 'integral_basic' },
+            { fn: x => 2, bounds: [0, 3], area: 6, label: 'f(x) = 2, from 0 to 3', teach: "Rectangle! Height 2 × width 3 = area 6. The simplest integral.", concept: 'integral_basic' },
+            { fn: x => x, bounds: [0, 4], area: 8, label: 'f(x) = x, from 0 to 4', teach: "A triangle! Base 4, height 4, area = ½×4×4 = 8.", concept: 'integral_basic' },
+            { fn: x => 3, bounds: [0, 2], area: 6, label: 'f(x) = 3, from 0 to 2', teach: "Constant function: area is just height × width = 3×2 = 6.", concept: 'integral_basic' },
+            { fn: x => x + 1, bounds: [0, 2], area: 4, label: 'f(x) = x+1, from 0 to 2', teach: "Trapezoid shape. Average height = 2, width = 2, area = 4.", concept: 'integral_basic' },
         ],
         medium: [
-            { fn: x => x * x, bounds: [0, 2], area: 8/3, label: '∫₀² x² dx', concept: 'integral_definite' },
-            { fn: x => x * x, bounds: [0, 3], area: 9, label: '∫₀³ x² dx', concept: 'integral_definite' },
-            { fn: x => 4 - x*x, bounds: [0, 2], area: 16/3, label: '∫₀² (4-x²) dx', concept: 'integral_area' },
-            { fn: x => Math.sqrt(x), bounds: [0, 4], area: 16/3, label: '∫₀⁴ √x dx', concept: 'integral_definite' },
-            { fn: x => 3*x - x*x, bounds: [0, 3], area: 4.5, label: '∫₀³ (3x-x²) dx', concept: 'integral_area' },
+            { fn: x => x * x, bounds: [0, 2], area: 2.67, label: 'f(x) = x², from 0 to 2', teach: "Under a parabola: ∫x²dx = x³/3. From 0 to 2: 8/3 ≈ 2.67.", concept: 'integral_definite' },
+            { fn: x => 4 - x * x, bounds: [0, 2], area: 5.33, label: 'f(x) = 4-x², from 0 to 2', teach: "Upside-down parabola. More area near x=0 where it's tall!", concept: 'integral_area' },
+            { fn: x => Math.sqrt(x), bounds: [0, 4], area: 5.33, label: 'f(x) = √x, from 0 to 4', teach: "Square root grows fast then slows. ∫√x dx = (2/3)x^(3/2).", concept: 'integral_definite' },
         ],
         hard: [
-            { fn: x => Math.sin(x), bounds: [0, Math.PI], area: 2, label: '∫₀π sin(x) dx', concept: 'integral_definite' },
-            { fn: x => x*x - 2*x, bounds: [0, 3], area: 0, label: '∫₀³ (x²-2x) dx', concept: 'integral_negative' },
-            { fn: x => Math.cos(x), bounds: [0, Math.PI/2], area: 1, label: '∫₀^(π/2) cos(x) dx', concept: 'integral_definite' },
-            { fn: x => x*x*x, bounds: [-1, 1], area: 0, label: '∫₋₁¹ x³ dx', concept: 'integral_negative' },
-            { fn: x => 4 - x*x, bounds: [-2, 2], area: 32/3, label: '∫₋₂² (4-x²) dx', concept: 'integral_area' },
+            { fn: x => Math.sin(x), bounds: [0, 3.14], area: 2, label: 'f(x) = sin(x), from 0 to π', teach: "One arch of sine has area exactly 2! ∫sin(x)dx = -cos(x).", concept: 'integral_definite' },
+            { fn: x => x * x - 2 * x + 2, bounds: [0, 3], area: 6, label: 'f(x) = x²-2x+2, from 0 to 3', teach: "A shifted parabola. Power rule: ∫(x²-2x+2)dx = x³/3 - x² + 2x.", concept: 'integral_definite' },
         ]
     },
 
     init(canvas, ctx, engine) {
         this.canvas = canvas; this.ctx = ctx; this.engine = engine;
-        this.questionCount = 0; this.showingAnswer = false;
-        this.setupControls();
+        this.questionCount = 0; this.setupControls();
     },
 
     setupControls() {
-        const controls = document.getElementById('game-controls');
-        controls.innerHTML = `
-            <div class="inline-instruction">👆 Estimate the teal shaded area using the slider</div>
-            <div class="control-row">
-                <span class="control-label">Area ≈</span>
-                <input type="range" id="area-slider" min="-5" max="15" step="0.1" value="3">
-                <span class="control-value" id="area-display">3.0</span>
-            </div>
-            <button class="submit-btn" id="area-submit">Submit ▶</button>
-            <div class="answer-reveal hidden" id="area-answer"></div>
-        `;
-        const slider = document.getElementById('area-slider');
-        const display = document.getElementById('area-display');
-        slider.addEventListener('input', () => {
-            this.sliderValue = parseFloat(slider.value);
-            display.textContent = this.sliderValue.toFixed(1);
-        });
-        document.getElementById('area-submit').addEventListener('click', () => this.submit());
-        document.addEventListener('keydown', this._keyHandler = (e) => {
-            if (e.key === 'Enter' && this.engine.state === 'playing') this.submit();
-        });
+        document.getElementById('game-controls').innerHTML = `
+            <div class="inline-instruction">📊 Look at the shaded area. Pick the best estimate!</div>
+            <div class="choices-row" id="area-choices"></div>
+            <div class="answer-reveal hidden" id="area-answer"></div>`;
     },
 
     generateQuestion() {
-        this.questionCount++;
-        this.showingAnswer = false;
-        const answerEl = document.getElementById('area-answer');
-        if (answerEl) answerEl.classList.add('hidden');
-
+        this.questionCount++; this.showingAnswer = false; this.selectedChoice = -1;
+        const el = document.getElementById('area-answer'); if (el) el.classList.add('hidden');
         if (window.app && window.app.assessment) {
             const elapsed = 30 - this.engine.timer;
             const acc = this.engine.total > 0 ? this.engine.correct / this.engine.total : 0.5;
@@ -81,129 +51,123 @@ const AreaCatcher = {
         }
         const pool = this.functions[this.difficulty];
         this.currentQuestion = pool[Math.floor(Math.random() * pool.length)];
-        this.riemannCount = 4; this.riemannAnim = 0;
 
-        const area = this.currentQuestion.area;
-        const slider = document.getElementById('area-slider');
-        const range = Math.max(Math.abs(area) * 2.5, 8);
-        slider.min = Math.round(Math.min(-2, area - range / 2));
-        slider.max = Math.round(Math.max(4, area + range / 2));
-        slider.value = 0; this.sliderValue = 0;
-        document.getElementById('area-display').textContent = '0.0';
-        document.getElementById('game-instruction').textContent = 'How much area is shaded?';
-    },
-
-    submit() {
-        if (!this.currentQuestion || this.engine.state !== 'playing' || this.showingAnswer) return;
+        // Generate 4 choices (one correct, three distractors)
         const actual = this.currentQuestion.area;
-        const estimated = this.sliderValue;
-        const error = Math.abs(estimated - actual);
-        const maxError = Math.max(Math.abs(actual) * 0.5, 2);
-        const accuracy = Math.max(0, 1 - error / maxError);
-        const wasCorrect = accuracy >= 0.35;
-
-        this.showingAnswer = true;
-        const answerEl = document.getElementById('area-answer');
-        answerEl.innerHTML = wasCorrect
-            ? `✓ Actual area: <strong>${actual.toFixed(2)}</strong> (you said ${estimated.toFixed(1)})`
-            : `✗ Actual area: <strong>${actual.toFixed(2)}</strong> (you said ${estimated.toFixed(1)})`;
-        answerEl.className = `answer-reveal ${wasCorrect ? 'answer-correct' : 'answer-wrong'}`;
-
-        this.engine.submitAnswer({ correct: wasCorrect, accuracy, concept: this.currentQuestion.concept });
-    },
-
-    update(dt) {
-        this.riemannAnim += dt;
-        if (this.riemannAnim > 2 && this.riemannCount < 16) {
-            this.riemannCount = Math.min(16, this.riemannCount * 2);
-            this.riemannAnim = 0;
+        const correct = Math.round(actual * 100) / 100;
+        let choices = [correct];
+        while (choices.length < 4) {
+            const offset = (Math.random() - 0.3) * actual * 1.2 + (Math.random() > 0.5 ? 1.5 : -1);
+            const distractor = Math.round((actual + offset) * 100) / 100;
+            if (distractor > 0 && !choices.some(c => Math.abs(c - distractor) < 0.3)) choices.push(distractor);
         }
+        // Shuffle
+        this.choices = choices.sort(() => Math.random() - 0.5);
+        this.correctIndex = this.choices.indexOf(correct);
+
+        // Render choice buttons
+        const row = document.getElementById('area-choices');
+        row.innerHTML = this.choices.map((c, i) =>
+            `<button class="choice-btn" data-idx="${i}">${c.toFixed(1)}</button>`
+        ).join('');
+        row.querySelectorAll('.choice-btn').forEach(btn => {
+            btn.addEventListener('click', () => this.selectChoice(parseInt(btn.dataset.idx)));
+        });
+
+        document.getElementById('game-instruction').textContent = 'What is the shaded area?';
     },
+
+    selectChoice(idx) {
+        if (this.showingAnswer || this.engine.state !== 'playing') return;
+        this.selectedChoice = idx;
+        this.showingAnswer = true;
+        const isCorrect = idx === this.correctIndex;
+        const accuracy = isCorrect ? 1 : 0.1;
+
+        // Highlight buttons
+        document.querySelectorAll('.choice-btn').forEach((btn, i) => {
+            btn.style.pointerEvents = 'none';
+            if (i === this.correctIndex) btn.classList.add('choice-correct');
+            else if (i === idx && !isCorrect) btn.classList.add('choice-wrong');
+        });
+
+        const answerEl = document.getElementById('area-answer');
+        answerEl.innerHTML = `<span>${isCorrect ? '✓' : '✗'} Area = ${this.currentQuestion.area.toFixed(2)}</span><br><small>${this.currentQuestion.teach}</small>`;
+        answerEl.className = `answer-reveal ${isCorrect ? 'answer-correct' : 'answer-wrong'}`;
+
+        this.engine.submitAnswer({ correct: isCorrect, accuracy, concept: this.currentQuestion.concept });
+    },
+
+    update(dt) {},
 
     render(ctx, w, h) {
         if (!this.currentQuestion) return;
         const q = this.currentQuestion;
-        const padding = 50;
-        const graphH = h - padding * 2 - 80;
-        const graphW = w - padding * 2;
+        const pad = 40, graphH = h - 160;
         const [a, b] = q.bounds;
-        const xPad = (b - a) * 0.5;
+        const xPad = (b - a) * 0.4;
         const xMin = a - xPad, xMax = b + xPad;
-        let yMin = -1, yMax = 5;
-        for (let x = xMin; x <= xMax; x += 0.1) {
-            const y = q.fn(x);
-            if (y < yMin) yMin = y - 1;
-            if (y > yMax) yMax = y + 1;
-        }
-        const toScreenX = (x) => padding + (x - xMin) / (xMax - xMin) * graphW;
-        const toScreenY = (y) => padding + (1 - (y - yMin) / (yMax - yMin)) * graphH;
-        const y0 = toScreenY(0);
+        let yMin = -0.5, yMax = 5;
+        for (let x = xMin; x <= xMax; x += 0.1) { const y = q.fn(x); if (y > yMax) yMax = y + 0.5; }
+        const toSX = x => pad + (x - xMin) / (xMax - xMin) * (w - 2 * pad);
+        const toSY = y => pad + graphH - ((y - yMin) / (yMax - yMin)) * graphH;
+        const y0 = toSY(0);
 
         // Grid
         ctx.strokeStyle = 'rgba(255,255,255,0.04)'; ctx.lineWidth = 1;
-        for (let x = Math.ceil(xMin); x <= xMax; x++) { ctx.beginPath(); ctx.moveTo(toScreenX(x), padding); ctx.lineTo(toScreenX(x), padding + graphH); ctx.stroke(); }
-        for (let y = Math.ceil(yMin); y <= yMax; y++) { ctx.beginPath(); ctx.moveTo(padding, toScreenY(y)); ctx.lineTo(padding + graphW, toScreenY(y)); ctx.stroke(); }
+        for (let x = Math.ceil(xMin); x <= xMax; x++) { ctx.beginPath(); ctx.moveTo(toSX(x), pad); ctx.lineTo(toSX(x), pad + graphH); ctx.stroke(); }
         ctx.strokeStyle = 'rgba(255,255,255,0.15)'; ctx.lineWidth = 1.5;
-        ctx.beginPath(); ctx.moveTo(padding, y0); ctx.lineTo(padding + graphW, y0); ctx.stroke();
+        ctx.beginPath(); ctx.moveTo(pad, y0); ctx.lineTo(w - pad, y0); ctx.stroke();
 
-        // Shaded area
+        // Shaded area (vibrant)
         ctx.save();
-        const gradient = ctx.createLinearGradient(0, toScreenY(yMax), 0, y0);
-        gradient.addColorStop(0, 'rgba(0, 229, 204, 0.35)');
-        gradient.addColorStop(1, 'rgba(0, 229, 204, 0.08)');
-        ctx.fillStyle = gradient;
-        ctx.beginPath(); ctx.moveTo(toScreenX(a), y0);
-        for (let px = 0; px <= 100; px++) { const x = a + (px/100)*(b-a); ctx.lineTo(toScreenX(x), toScreenY(q.fn(x))); }
-        ctx.lineTo(toScreenX(b), y0); ctx.closePath(); ctx.fill();
+        const grad = ctx.createLinearGradient(0, toSY(yMax), 0, y0);
+        grad.addColorStop(0, 'rgba(0, 229, 204, 0.4)');
+        grad.addColorStop(1, 'rgba(0, 229, 204, 0.1)');
+        ctx.fillStyle = grad;
+        ctx.beginPath(); ctx.moveTo(toSX(a), y0);
+        for (let px = 0; px <= 80; px++) { const x = a + (px / 80) * (b - a); ctx.lineTo(toSX(x), toSY(q.fn(x))); }
+        ctx.lineTo(toSX(b), y0); ctx.closePath(); ctx.fill();
         ctx.restore();
 
-        // Riemann rectangles
-        const n = this.riemannCount; const dx = (b - a) / n;
-        ctx.strokeStyle = 'rgba(124, 92, 231, 0.5)'; ctx.fillStyle = 'rgba(124, 92, 231, 0.15)'; ctx.lineWidth = 1;
+        // Riemann rectangles (visual aid)
+        const n = 6; const dx = (b - a) / n;
+        ctx.strokeStyle = 'rgba(124, 92, 231, 0.6)'; ctx.fillStyle = 'rgba(124, 92, 231, 0.2)'; ctx.lineWidth = 1;
         for (let i = 0; i < n; i++) {
-            const x = a + i * dx; const fVal = q.fn(x + dx/2);
-            const sx = toScreenX(x); const sw = toScreenX(x + dx) - sx;
-            const sy = toScreenY(Math.max(0, fVal)); const sh = y0 - sy;
-            ctx.fillRect(sx, sy, sw, sh); ctx.strokeRect(sx, sy, sw, sh);
+            const x = a + i * dx; const fv = q.fn(x + dx / 2);
+            const sx = toSX(x), sw = toSX(x + dx) - sx, sy = toSY(fv), sh = y0 - sy;
+            if (sh > 0) { ctx.fillRect(sx, sy, sw, sh); ctx.strokeRect(sx, sy, sw, sh); }
         }
 
-        // Bounds markers
+        // Bounds
         ctx.setLineDash([5, 5]); ctx.strokeStyle = 'rgba(255, 107, 157, 0.7)'; ctx.lineWidth = 2;
-        ctx.beginPath(); ctx.moveTo(toScreenX(a), padding); ctx.lineTo(toScreenX(a), padding + graphH); ctx.stroke();
-        ctx.beginPath(); ctx.moveTo(toScreenX(b), padding); ctx.lineTo(toScreenX(b), padding + graphH); ctx.stroke();
+        ctx.beginPath(); ctx.moveTo(toSX(a), pad); ctx.lineTo(toSX(a), pad + graphH); ctx.stroke();
+        ctx.beginPath(); ctx.moveTo(toSX(b), pad); ctx.lineTo(toSX(b), pad + graphH); ctx.stroke();
         ctx.setLineDash([]);
 
-        // Draw curve
-        ctx.save(); ctx.shadowColor = 'rgba(0, 229, 204, 0.4)'; ctx.shadowBlur = 10;
+        // Curve
+        ctx.save(); ctx.shadowColor = 'rgba(0, 229, 204, 0.5)'; ctx.shadowBlur = 10;
         ctx.strokeStyle = '#00e5cc'; ctx.lineWidth = 3; ctx.beginPath();
         let first = true;
-        for (let px = 0; px <= graphW; px += 2) {
-            const x = xMin + (px / graphW) * (xMax - xMin); const y = q.fn(x);
-            if (y < yMin - 2 || y > yMax + 2) { first = true; continue; }
-            const sx = toScreenX(x), sy = toScreenY(y);
+        for (let x = xMin; x <= xMax; x += 0.05) {
+            const sx = toSX(x), sy = toSY(q.fn(x));
+            if (sy < pad - 5 || sy > pad + graphH + 5) { first = true; continue; }
             if (first) { ctx.moveTo(sx, sy); first = false; } else ctx.lineTo(sx, sy);
         }
         ctx.stroke(); ctx.restore();
 
-        // On-canvas instruction
-        ctx.fillStyle = 'rgba(255,255,255,0.85)'; ctx.font = 'bold 14px sans-serif'; ctx.textAlign = 'center';
-        ctx.fillText('Estimate the total shaded (teal) area below the curve', w/2, padding - 10);
+        // Label
+        ctx.fillStyle = 'rgba(255,255,255,0.8)'; ctx.font = 'bold 13px sans-serif'; ctx.textAlign = 'center';
+        ctx.fillText(q.label, w / 2, pad - 5);
+        ctx.fillStyle = 'rgba(255,255,255,0.5)'; ctx.font = '11px sans-serif';
+        ctx.fillText('Shaded area = ?', w / 2, pad + 12);
         ctx.textAlign = 'left';
 
-        // Function label + hint
-        ctx.fillStyle = 'rgba(255,255,255,0.7)'; ctx.font = '14px "SF Mono", monospace';
-        ctx.fillText(q.label, padding + 5, padding + graphH + 35);
-        ctx.fillStyle = 'rgba(255,255,255,0.3)'; ctx.font = '11px sans-serif';
-        ctx.fillText(`Hint: count the purple rectangles (${this.riemannCount} shown)`, padding + 5, padding + graphH + 52);
-
-        // Bounds labels (bigger)
+        // Bounds labels
         ctx.fillStyle = 'rgba(255,107,157,0.9)'; ctx.font = 'bold 12px "SF Mono", monospace';
-        ctx.fillText(`a=${a.toFixed(1)}`, toScreenX(a) - 15, padding + graphH + 18);
-        ctx.fillText(`b=${b.toFixed(1)}`, toScreenX(b) - 15, padding + graphH + 18);
+        ctx.fillText(a.toFixed(0), toSX(a) - 3, y0 + 16);
+        ctx.fillText(b.toFixed(1), toSX(b) - 5, y0 + 16);
     },
 
-    cleanup() {
-        document.removeEventListener('keydown', this._keyHandler);
-        document.getElementById('game-controls').innerHTML = '';
-    }
+    cleanup() { document.getElementById('game-controls').innerHTML = ''; }
 };

@@ -12,7 +12,9 @@ class App {
         this.games = {
             'slope-surfer': SlopeSurfer,
             'area-catcher': AreaCatcher,
-            'limit-lander': LimitLander
+            'limit-lander': LimitLander,
+            'rate-racer': RateRacer,
+            'peak-finder': PeakFinder
         };
         this.init();
     }
@@ -83,7 +85,7 @@ class App {
         this.particles.menu.stop();
 
         // Set HUD title
-        const titles = { 'slope-surfer': 'Slope Surfer', 'area-catcher': 'Area Catcher', 'limit-lander': 'Limit Lander' };
+        const titles = { 'slope-surfer': 'Derivative Draw', 'area-catcher': 'Area Pick', 'limit-lander': 'Limit Picker', 'rate-racer': 'Rate Racer', 'peak-finder': 'Peak Finder' };
         document.getElementById('game-title-hud').textContent = titles[gameType] || '';
 
         // Setup game canvas particles
