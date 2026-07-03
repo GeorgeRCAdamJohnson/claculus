@@ -1,0 +1,206 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="theme-color" content="#0a0a1a">
+    <title>Calculus Rush - Learn Calculus in 30 Seconds!</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div id="app">
+        <!-- Main Menu -->
+        <div id="menu-screen" class="screen active">
+            <canvas id="menu-particles"></canvas>
+            <div class="menu-container">
+                <h1 class="game-title">CALCULUS<span class="highlight">RUSH</span></h1>
+                <p class="subtitle">Master calculus in 30-second bursts</p>
+                
+                <div class="game-modes">
+                    <button class="mode-btn" data-game="slope-surfer">
+                        <div class="mode-icon">✏️</div>
+                        <div class="mode-info">
+                            <h3>Derivative Draw</h3>
+                            <p>Draw the derivative with your finger!</p>
+                        </div>
+                        <div class="mode-meta">
+                            <div class="mode-badge">Derivatives</div>
+                            <div class="mode-score">Best: <span class="high-score" data-mode="slope-surfer">0</span></div>
+                        </div>
+                    </button>
+                    
+                    <button class="mode-btn" data-game="area-catcher">
+                        <div class="mode-icon">📊</div>
+                        <div class="mode-info">
+                            <h3>Area Pick</h3>
+                            <p>Estimate the integral from the graph</p>
+                        </div>
+                        <div class="mode-meta">
+                            <div class="mode-badge badge-teal">Integrals</div>
+                            <div class="mode-score">Best: <span class="high-score" data-mode="area-catcher">0</span></div>
+                        </div>
+                    </button>
+                    
+                    <button class="mode-btn" data-game="limit-lander">
+                        <div class="mode-icon">🎯</div>
+                        <div class="mode-info">
+                            <h3>Limit Picker</h3>
+                            <p>What value does the function approach?</p>
+                        </div>
+                        <div class="mode-meta">
+                            <div class="mode-badge badge-pink">Limits</div>
+                            <div class="mode-score">Best: <span class="high-score" data-mode="limit-lander">0</span></div>
+                        </div>
+                    </button>
+
+                    <button class="mode-btn" data-game="rate-racer">
+                        <div class="mode-icon">🚗</div>
+                        <div class="mode-info">
+                            <h3>Rate Racer</h3>
+                            <p>Speed graph → total distance</p>
+                        </div>
+                        <div class="mode-meta">
+                            <div class="mode-badge badge-teal">FTC</div>
+                            <div class="mode-score">Best: <span class="high-score" data-mode="rate-racer">0</span></div>
+                        </div>
+                    </button>
+
+                    <button class="mode-btn" data-game="peak-finder">
+                        <div class="mode-icon">⛰️</div>
+                        <div class="mode-info">
+                            <h3>Peak Finder</h3>
+                            <p>Tap the maxima & minima</p>
+                        </div>
+                        <div class="mode-meta">
+                            <div class="mode-badge">Max/Min</div>
+                            <div class="mode-score">Best: <span class="high-score" data-mode="peak-finder">0</span></div>
+                        </div>
+                    </button>
+                </div>
+
+                <div class="menu-footer">
+                    <button id="btn-knowledge-map" class="btn-link">📊 Knowledge Map</button>
+                    <button id="btn-how-to-play" class="btn-link">❓ How to Play</button>
+                    <button id="btn-toggle-sound" class="btn-link">🔊 Sound</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Tutorial Screen -->
+        <div id="tutorial-screen" class="screen">
+            <div class="tutorial-container">
+                <div class="tutorial-header">
+                    <h2 id="tutorial-title">How to Play</h2>
+                    <button id="tutorial-skip" class="btn-text">Skip →</button>
+                </div>
+                <div class="tutorial-content">
+                    <div id="tutorial-illustration" class="tutorial-illustration"></div>
+                    <p id="tutorial-text" class="tutorial-text"></p>
+                </div>
+                <div class="tutorial-footer">
+                    <div id="tutorial-dots" class="tutorial-dots"></div>
+                    <button id="tutorial-next" class="btn-primary">Next</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Game Screen -->
+        <div id="game-screen" class="screen">
+            <div class="game-hud">
+                <div class="hud-left">
+                    <div class="timer-container">
+                        <svg class="timer-ring" viewBox="0 0 60 60">
+                            <circle class="timer-bg" cx="30" cy="30" r="26"></circle>
+                            <circle id="timer-progress" class="timer-progress" cx="30" cy="30" r="26"></circle>
+                        </svg>
+                        <span id="timer-text">30</span>
+                    </div>
+                </div>
+                <div class="hud-center">
+                    <h2 id="game-title-hud"></h2>
+                    <p id="game-instruction"></p>
+                </div>
+                <div class="hud-right">
+                    <div class="score-display">
+                        <span class="score-label">SCORE</span>
+                        <span id="score-value">0</span>
+                    </div>
+                    <div id="streak-display" class="streak-display hidden">
+                        <span id="streak-value">🔥x2</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="game-area">
+                <canvas id="game-canvas"></canvas>
+                <div id="game-controls"></div>
+            </div>
+
+            <div id="feedback-popup" class="feedback hidden"></div>
+            <div id="countdown-overlay" class="countdown-overlay hidden">
+                <span id="countdown-number" class="countdown-number">3</span>
+            </div>
+        </div>
+
+        <!-- Results Screen -->
+        <div id="results-screen" class="screen">
+            <canvas id="results-particles"></canvas>
+            <div class="results-container">
+                <h2 class="results-title">⏰ Time's Up!</h2>
+                <div class="results-score">
+                    <span class="final-score-label">Final Score</span>
+                    <span id="final-score" class="final-score-value">0</span>
+                </div>
+                <div id="new-high-score" class="new-high hidden">🎉 New High Score!</div>
+                <div class="results-stats">
+                    <div class="stat">
+                        <span class="stat-value" id="stat-correct">0</span>
+                        <span class="stat-label">Correct</span>
+                    </div>
+                    <div class="stat">
+                        <span class="stat-value" id="stat-streak">0</span>
+                        <span class="stat-label">Best Streak</span>
+                    </div>
+                    <div class="stat">
+                        <span class="stat-value" id="stat-accuracy">0%</span>
+                        <span class="stat-label">Accuracy</span>
+                    </div>
+                </div>
+                <div class="results-insight">
+                    <p id="calculus-tip"></p>
+                </div>
+                <div class="results-buttons">
+                    <button id="btn-retry" class="btn-primary">Play Again</button>
+                    <button id="btn-menu" class="btn-secondary">Menu</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Knowledge Map Screen -->
+        <div id="knowledge-screen" class="screen">
+            <div class="knowledge-container">
+                <div class="knowledge-header">
+                    <button id="btn-knowledge-back" class="btn-text">← Back</button>
+                    <h2>Knowledge Map</h2>
+                </div>
+                <div class="knowledge-grid" id="knowledge-grid"></div>
+                <div class="knowledge-summary" id="knowledge-summary"></div>
+            </div>
+        </div>
+    </div>
+
+    <script src="feedback.js"></script>
+    <script src="particles.js"></script>
+    <script src="assessment.js"></script>
+    <script src="tutorial.js"></script>
+    <script src="engine.js"></script>
+    <script src="games/slope-surfer.js"></script>
+    <script src="games/area-catcher.js"></script>
+    <script src="games/limit-lander.js"></script>
+    <script src="games/rate-racer.js"></script>
+    <script src="games/peak-finder.js"></script>
+    <script src="main.js"></script>
+</body>
+</html>
